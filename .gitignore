@@ -125,4 +125,7 @@ dmypy.json
 .pyre/
 
 # API keys
-settings.json
+settings.py
+
+# database files
+database.ini
