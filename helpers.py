@@ -16,37 +16,117 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import psycopg2
 import pygmaps
 
+from config import config
+
+def connect():
+    """ Connect to the PostgreSQL database server """
+    conn = None
+    try:
+        # read connection parameters
+        params = config()
+
+        # connect to the PostgreSQL server
+        print("Connecting to the PostgreSQL database...")
+        conn = psycopg2.connect(**params)
+
+        # create a cursor
+        cur = conn.cursor()
+
+        # execute a statement
+        print("PostgreSQL database version: ")
+        cur.execute("SELECT version()")
+
+        # display the PostgreSQL database server version
+        db_version = cur.fetchone()
+        print(db_version)        
+
+        # close the communication with the PostgreSQL server
+        cur.close()
+    
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+            print("Database connection closed")
+
+def create_tables():
+    """ Create tables in the PostgreSQL database. """
+    commands = [
+        # "CREATE TABLE inventory (meter_id VARCHAR(10) NOT NULL, latitude DECIMAL NOT NULL, longitude DECIMAL NOT NULL)"
+        """  CREATE TABLE inventory (
+            space_id VARCHAR(10) NOT NULL, 
+            blockface VARCHAR(256),
+            meterType VARCHAR(20),
+            rateType VARCHAR(16),
+            rateRange VARCHAR(50),
+            meteredTimeLimit INTEGER,
+            parkingPolicy VARCHAR(256),
+            streetCleaning VARCHAR(128),
+            latitude NUMERIC,
+            longitude NUMERIC
+            ) """
+    ]    
+    conn = None
+    try:
+        # read the connection parameters
+        params = config()
+        # connect to the PostgreSQL server
+        print("Connecting to the PostgreSQL database...")
+        conn = psycopg2.connect(**params)
+        cur = conn.cursor()
+
+        # get the updated list of tables
+        sqlGetTableList = "SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema='public';"        
+        cur.execute(sqlGetTableList)        
+        tables = cur.fetchall()       
+        print("tables datatype: " + str(type(tables)))
+        for table in tables:
+            print(table)
+        if ('public', 'inventory') not in tables:
+            # create a table one-by-one                
+            for command in commands:                                                    
+                cur.execute(command)
+            # commit the changes
+            conn.commit()        
+        
+        # close communication with the PostgreSQL database server
+        cur.close()
+        
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+def insert_inventory():
+    """ Insert data into a PostgreSQL table. """
+    commands = ["""INSERT INTO inventory (meter_id, latitude, longitude)"""]
+    conn = None
+    try:
+        # read the connection parameters
+        params = config()
+        # connect to the PostgreSQL server
+        print("Connecting to the PostgreSQL database...")
+        conn = psycopg2.connect(**params)
+        cur = conn.cursor()
+        # execute SQL commands
+        for command in commands:
+            cur.execute(command)
+        # commit changes
+        conn.commit()
+        # close communication with the PostgreSQL database server
+        cur.close()        
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
 # JSON test
-with open("settings.json") as f:
-    my_dict = json.load(f)
-print(my_dict["app_token"])
-
-# Import parking meter location data
-inventory = pd.read_csv('Parking_Meter_Inventory.csv')
-lat_lng = inventory['LatLng']
-
-# Retrieve coordinates of parking meters
-latitudes = []
-longitudes = []
-count = 0
-for pair in lat_lng:
-    coord = pair.replace('(', '').replace(')', '').split(', ')
-    latitudes.append(float(coord[0]))
-    longitudes.append(float(coord[1]))
-
-# Retrieve data for each parking meter
-time_limit = inventory['MeteredTimeLimit']
-rate_range = inventory['RateRange']
-
-
-# Generate base Google map
-# Because Google Maps is not a free service, an API key is needed. Without an
-# API key, the map will have a "For Development Purpose Only" overlay on the
-# screen and will have low resolution.
-gmap = gmplot.GoogleMapPlotter(34.05223, -118.24368, 12)
-# gmap.plot(latitudes, longitudes)
-gmap.scatter(latitudes, longitudes, '#FF0000', size=40, marker=False)
-# gmap.apikey = GMAP_API_KEY
-gmap.draw('./mapLA.html')
+# with open("settings.json") as f:
+#     my_dict = json.load(f)
+# print(my_dict["app_token"])
