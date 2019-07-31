@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
 from helpers import *
 from settings import *
 import geopandas as gpd
@@ -14,22 +14,58 @@ from sodapy import Socrata
 
 app = Flask(__name__)
 
-# Unauthenticated client only works with public data sets. Note 'None' in place 
-# of application token, and no username or password:
-# client = Socrata("data.lacity.org", None)
+# Authenticated client
+client = Socrata("data.lacity.org",
+                  SODA_app_token,
+                  username=SODA_username,
+                  password=SODA_pwd)
 
-# Example authenticated client (needed for non-public datasets):
-# client = Socrata(data.lacity.org,
-#                   MyAppToken,
-#                   username="user@example.com"
-#                   password="password")
-
-# First 2000 results, returned as JSON from API / converted to Python list of 
-# dictionaries by sodapy.
-# results = client.get("e7h6-4a3e", limit=2000)
+# Return JSON from API / converted to Python list of dictionaries by sodapy of 
+# vacant parking meters
+try:
+    vacant_meters = client.get("e7h6-4a3e", occupancystate="VACANT")
+except:
+    print("Timeout occurred")
 
 # Convert to pandas DataFrame
-# results_df = pd.DataFrame.from_records(results)
+results_df = pd.DataFrame.from_records(vacant_meters)
+# print(results_df.head())
+# print(results_df.iloc[0])
+# print(type(results_df.iloc[0]))
+# print("type of spaceid: " + str(type(results_df.iloc[0]['spaceid'])))
+# print("Number of vacant parking meters: " + str(results_df.shape[0]))
+
+# Get coordinates of vacant parking meters
+# query for lat/lng coordinates using spaceid in postgreSQL db
+lat_lng = []
+try:
+    params = config()
+    conn = psycopg2.connect(**params)
+    cur = conn.cursor()
+    result1 = results_df.iloc[0]
+    spaceid = result1['spaceid']
+    print('spaceid: ' + spaceid)
+    cur.execute("SELECT latitude::float, longitude::float FROM inventory WHERE space_id='%s';" % spaceid)
+    result = cur.fetchall()       
+    print('size of result: ' + str(result)) 
+    for i in range(len(result)):
+        lat_lng.append((result[i][0], result[i][1]))  
+    for j in lat_lng:
+        print("spaceid j: " + str(j))
+    cur.close()
+    print("WE MADE IT")
+except (Exception, psycopg2.DatabaseError) as error:    
+    print(error)
+finally:
+    if conn is not None:
+        conn.close()
+        print("Database connection closed")
+
+
+
+# lat_lng = []
+# for i in range(results_df.shape[0]):
+#     lat_lng.append((results_df.iloc[i]))
 
 # Create PostgreSQL tables
 create_tables()
@@ -70,45 +106,34 @@ inventory_file = 'Parking_Meter_Inventory_RAW.csv'
 
 @app.route('/')
 def main():
-    """Landing page for search"""
+    """ Landing page for search """        
 
-    # Get id and coordinates of all parking meters
-    conn = None
-    ids = []
-    latitudes = []
-    longitudes = []
-    try:
-        params = config()
-        conn = psycopg2.connect(**params)
-        cur = conn.cursor()
-        cur.execute("SELECT space_id, latitude::float, longitude::float FROM inventory")
-        result = cur.fetchall()        
-        for i in range(len(result)):
-            ids.append(result[i][0])
-            latitudes.append(result[i][1])
-            longitudes.append(result[i][2])
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
-            print("Database connection closed")
-
-
-    # Generate base Google Map
-    gmap = gmplot.GoogleMapPlotter(34.05223, -118.24368, 12)
-    # gmap.plot(latitudes, longitudes)
-
-    gmap.scatter(latitudes, longitudes, '#FF0000', size=1, marker=False)
-    
+    return render_template("home.html")
+      
     # for i in range(len(latitudes)):
     #     gmap.marker(latitudes[i], longitudes[i], title="sampleText")
 
 
     # gmap.apikey = GMAP_API_KEY
 
-    # gmap.draw('./templates/sample.html')
-    # return render_template("sample.html")
-    gmap.draw('./templates/mapLA.html')
-    return render_template("mapLA.html")
+    # plot_data(get_all_meters())
+    # plot_data(lat_lng[0])
+    # return render_template("mapLA.html")
+
+@app.route('/vacancies')
+def vacancies():
+    """ Get vacant parking meters """
+
+    # Query for parking meters
+    # conn = connect()
+    # cur = conn.cursor()
+    # cur.execute("SELECT space_id, latitude::float, longitude::float FROM inventory")
+    # meters = cur.fetchall()
+    
+    return None
+
+@app.route('/allmeters')
+def all_meters():
+    """ Get all parking meters """
+    meter_data = get_all_meters()
+    return jsonify(meter_data)

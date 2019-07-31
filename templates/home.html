@@ -17,6 +17,7 @@
                  padding: 0;
              }
         </style>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     </head>
     <body>
         <h3>ParkEasyLA</h3>
@@ -34,7 +35,7 @@
                 //     position: {lat: 34.05223, lng: -118.24368}, 
                 //     map: map
                 // });
-                console.log("WE OUT HERE");
+                
                 // Query Socrata for vacant parking meter spots and plot results
                 // url = "https://data.lacity.org/resource/e7h6-4a3e.json?"
                 //     + "occupancystate=VACANT"
@@ -50,7 +51,8 @@
                 //         });
                 //     });
                 // });
-
+                
+                // AJAX request for vacant openings in Socrata data set
                 $.ajax({
                     url: "https://data.lacity.org/resource/e7h6-4a3e.json?occupancystate=VACANT",
                     type: "GET",
@@ -59,20 +61,29 @@
                         "$$app_token": "ixOdggdMHJEhj3AjuHZ9JlPT4"
                     }
                 }).done(function(data) {
-                    alert("Retrieved " + data.length + " records from the dataset!");
+                    // alert("Retrieved " + data.length + " records from the dataset!");
                     console.log(data);
                 });
-            }
 
-            
-            
-
-            
-            
+                // fetch all parking meters from python backend
+                fetch('allmeters')
+                    .then(function (response) {
+                        return response.json();
+                    }).then(function (json) {
+                        // console.log('GET response as JSON:');
+                        // console.log(json); // Print the greeting as text
+                        // generate a marker for each parking meter
+                        for (let meter in json) {                            
+                            let marker = new google.maps.Marker({
+                                position: {lat: json[meter].lat, lng: json[meter].lng}, 
+                                map: map
+                            });
+                        }
+                    });
+            }   
         </script>
         <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD_GMyt2eggZXSU9f_gCKZDvKyHFDScMYE&callback=initMap"
-        async defer></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        async defer></script>        
         <!-- <script src="jquery-3.4.1.min.js"></script> -->
     </body>
 </html>
