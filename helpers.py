@@ -143,22 +143,16 @@ def insert_inventory():
 def get_all_meters():
     """ Query the PostgreSQL database for all parking meter information. """
     # Get id and coordinates of all parking meters
-    conn = None
-    ids = []
-    latitudes = []
-    longitudes = []
+    conn = None    
     try:
         params = config()
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
         cur.execute("SELECT space_id, latitude::float, longitude::float FROM inventory")
         result = cur.fetchall()
-        lat_lng = {}
+        meter_info = {}
         for i in range(len(result)):
-            lat_lng[result[i][0]] = {'lat': result[i][1], 'lng': result[i][2]}
-            # ids.append(result[i][0])
-            # latitudes.append(result[i][1])
-            # longitudes.append(result[i][2])
+            meter_info[result[i][0]] = {'space_id': result[i][0], 'lat': result[i][1], 'lng': result[i][2]}            
         cur.close()        
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
@@ -167,7 +161,7 @@ def get_all_meters():
             conn.close()
             print("Database connection closed")
     # return (latitudes, longitudes)
-    return lat_lng
+    return meter_info
     # return json.dumps(lat_lng)
 
 def get_vacant_meters():
