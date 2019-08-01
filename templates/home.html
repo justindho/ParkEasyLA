@@ -88,10 +88,10 @@
 
                         // generate markers for each parking meter location
                         let markers = locations.map(function (location) {
-                            let marker = new google.maps.Marker({
-                                // position: location,
+                            let marker = new google.maps.Marker({                                
                                 position: {'lat': location.lat, 'lng': location.lng},
-                                title: 'Click for details'
+                                // map: map,
+                                title: 'Click for details'                                
                             });
                             // content of info window
                             let contentString = '<div id="content">'+
@@ -108,11 +108,10 @@
                             });
                             
                             marker.addListener('click', function() {
-                                // zoom and center location upon marker click
-                                map.setZoom(8);
-                                map.setCenter(marker.getPosition());
+                                // zoom and center location upon marker click                                
+                                map.setCenter(marker.getPosition());                                                                
                                 // popup info window on marker click
-                                infowindow.open(map, marker);
+                                infowindow.open(map, marker);                                
                             });
                             return marker;                            
                         });
@@ -147,7 +146,8 @@
 
                         // generate a marker cluster for better UI
                         let markerCluster = new MarkerClusterer(map, markers,
-                            {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'});
+                            {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'}
+                            );
                     });
             }
         </script>
