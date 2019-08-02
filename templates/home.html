@@ -8,7 +8,7 @@
             /* Always set the map height explicitly to define the size of the div
              * element that contains the map. */
              #map {
-                 height: 75%;
+                 height: 90%;
              }
              /* Make the page fill the window. */
              html, body {
@@ -19,139 +19,14 @@
         </style>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
         <script src="{{ url_for('static', filename='markerclusterer_compiled.js') }}"></script>
+        <script src="{{ url_for('static', filename='home.js') }}"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD_GMyt2eggZXSU9f_gCKZDvKyHFDScMYE&callback=initMap"
+        async defer></script>
     </head>
     <body>
         <h3>ParkEasyLA</h3>
-        <div id="map"></div>
-        <script>
-            let map;
-            function initMap() {
-                // The map, centered at LA
-                map = new google.maps.Map(document.getElementById('map'), {
-                    center: {lat: 34.05223, lng: -118.24368},
-                    zoom: 12
-                });
-                // Demo marker
-                // let marker = new google.maps.Marker({
-                //     position: {lat: 34.05223, lng: -118.24368},
-                //     map: map
-                // });
-
-                // Query Socrata for vacant parking meter spots and plot results
-                // url = "https://data.lacity.org/resource/e7h6-4a3e.json?"
-                //     + "occupancystate=VACANT"
-                //     + "&$$app_token=ixOdggdMHJEhj3AjuHZ9JlPT4";
-                // $.getJSON(url, function(data, textstatus) {
-                //     $.each(data, function(i, entry) {
-                //         // Create a marker for each entry on our map
-                //         let marker = new google.maps.Marker({
-                //             position: new google.maps.LatLng(entry.location_1.coordinates[1],
-                //                                             entry.location_1.coordinates[0]),
-                //             map: map,
-                //             title: location.name
-                //         });
-                //     });
-                // });
-
-                // AJAX request for vacant openings in Socrata data set
-                $.ajax({
-                    url: "https://data.lacity.org/resource/e7h6-4a3e.json?occupancystate=VACANT",
-                    type: "GET",
-                    data: {
-                        "$limit": 50,
-                        "$$app_token": "ixOdggdMHJEhj3AjuHZ9JlPT4"
-                    }
-                }).done(function(data) {
-                    // alert("Retrieved " + data.length + " records from the dataset!");
-                    console.log(data);
-                });
-
-                // fetch all parking meters from python backend
-                fetch('allmeters')
-                    .then(function (response) {
-                        return response.json();
-                    }).then(function (json) {
-                        // generate a marker for each parking meter
-                        // for (let meter in json) {
-                        //     let marker = new google.maps.Marker({
-                        //         position: {lat: json[meter].lat, lng: json[meter].lng},
-                        //         map: map
-                        //     });
-                        // }
-
-                        // store locations from json response in an array
-                        let locations = [];
-                        for (let location in json) {
-                            // locations.push({'lat': json[location].lat, 'lng': json[location].lng});
-                            locations.push({'space_id': json[location].space_id, 'lat': json[location].lat, 'lng': json[location].lng});
-                        }
-
-                        // generate markers for each parking meter location
-                        let markers = locations.map(function (location) {
-                            let marker = new google.maps.Marker({                                
-                                position: {'lat': location.lat, 'lng': location.lng},
-                                // map: map,
-                                title: 'Click for details'                                
-                            });
-                            // content of info window
-                            let contentString = '<div id="content">'+
-                                '<div id="siteNotice">'+
-                                '</div>'+
-                                '<h1 class="firstHeading">' + location.space_id + '</h1>'+
-                                '<div id="bodyContent">'+
-                                '<p><a href="">Get directions</a></p>'+                                                                
-                                '</div>'+
-                                '</div>';
-
-                            let infowindow = new google.maps.InfoWindow({
-                                content: contentString
-                            });
-                            
-                            marker.addListener('click', function() {
-                                // zoom and center location upon marker click                                
-                                map.setCenter(marker.getPosition());                                                                
-                                // popup info window on marker click
-                                infowindow.open(map, marker);                                
-                            });
-                            return marker;                            
-                        });
-
-                        // style cluster markers
-                        let clusterStyles = [
-                            {
-                                textColor: 'black',
-                                url: 'https://github.com/justindho/ParkEasyLA/blob/master/img/m1.png?raw=true',
-                                height: 50,
-                                width: 50
-                            },
-                            {
-                                textColor: 'black',
-                                url: 'https://github.com/justindho/ParkEasyLA/blob/master/img/m2.png?raw=true',
-                                height: 50,
-                                width: 50
-                            },
-                            {
-                                textColor: 'black',
-                                url: 'https://github.com/justindho/ParkEasyLA/blob/master/img/m3.png?raw=true',
-                                height: 50,
-                                width: 50
-                            }
-                        ];
-
-                        let mcOptions = {
-                            gridSize: 50,
-                            styles: clusterStyles,
-                            maxZoom: 15
-                        };
-
-                        // generate a marker cluster for better UI
-                        let markerCluster = new MarkerClusterer(map, markers,
-                            {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'}
-                            );
-                    });
-            }
-        </script>
-        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD_GMyt2eggZXSU9f_gCKZDvKyHFDScMYE&callback=initMap"
-        async defer></script>        
+        <div id="map"></div>        
+        <!-- <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD_GMyt2eggZXSU9f_gCKZDvKyHFDScMYE&callback=initMap"
+        async defer></script>         -->
     </body>
 </html>
