@@ -37,99 +37,96 @@ function initMap() {
     });
 
     // Fetch all parking meters from python backend.
-    fetch('allmeters')
-        .then(function (response) {
-            // let pos = getLocation();
-            // console.log('line 43 position: ' + pos);         
-            // return {pos: getLocation(), response: response.json()};
-            return response.json();
-        // }).then(function(json) {
-        //     let pos = getLocation();
-        }).then(function (json) {
-            // console.log('current position: ' + json.pos);
-            // Store locations from json response in an array.
-            let locations = [];
-            for (let location in json) {                
-                locations.push({'space_id': json[location].space_id, 'lat': json[location].lat, 'lng': json[location].lng});
-            }
-
-            // Generate markers for each parking meter location.
-            let markers = locations.map(function (location) {
-                let marker = new google.maps.Marker({
-                    position: {'lat': location.lat, 'lng': location.lng},                    
-                    title: 'Click for details'
-                });
-                // Content of info window.                                
-                let start_lat = 34.0224;
-                let start_lng = -118.2851;
-                // let pos = getLocation();                
-
-                let contentString = '<div id="content">'+
-                    '<div id="siteNotice">'+
-                    '</div>'+
-                    '<h1 class="firstHeading">' + location.space_id + '</h1>'+
-                    '<div id="bodyContent">'+
-                    '<input type="button" id="button-directions" value="Get Directions" onclick="calculateRoute({lat: ' + start_lat + ', lng: ' + start_lng + '}, {lat: ' + location.lat + ', lng: ' + location.lng + '})"/>' +
-                    // '<input type="button" id="button-directions" value="Get Directions" onclick="calculateRoute({lat: ' + pos.lat + ', lng: ' + pos.lng + '}, {lat: ' + location.lat + ', lng: ' + location.lng + '})"/>' +
-                    '</div>'+
-                    '</div>';
-
-                let infowindow = new google.maps.InfoWindow({
-                    content: contentString
-                });
-
-                marker.addListener('click', function() {
-                    // Zoom and center location upon marker click.
-                    map.setCenter(marker.getPosition());
-
-                    // Get directions
-
-                    // Popup info window on marker click.
-                    infowindow.open(map, marker);
-                });
-                return marker;
-
-                // Only allow one infoWindow to show at once.
-                // google.maps.event.addEventListener(marker, 'click', (function(marker) {
-                //     return function(evt) {
-                //         infowindow.setContent('HELLO');
-                //         infowindow.open(map, marker);
-                //     }
-                // })(marker));
-            });
-
-            // Style cluster markers.
-            let clusterStyles = [
-                {
-                    textColor: 'black',
-                    url: 'https://github.com/justindho/ParkEasyLA/blob/master/img/m1.png?raw=true',
-                    height: 50,
-                    width: 50
-                },
-                {
-                    textColor: 'black',
-                    url: 'https://github.com/justindho/ParkEasyLA/blob/master/img/m2.png?raw=true',
-                    height: 50,
-                    width: 50
-                },
-                {
-                    textColor: 'black',
-                    url: 'https://github.com/justindho/ParkEasyLA/blob/master/img/m3.png?raw=true',
-                    height: 50,
-                    width: 50
+    navigator.geolocation.getCurrentPosition(function(position) {    
+        fetch('allmeters')
+            .then(function (response) {                
+                return response.json();            
+            }).then(function (json) {                
+                // Store locations from json response in an array.
+                let locations = [];
+                for (let location in json) {                
+                    locations.push({'space_id': json[location].space_id, 'lat': json[location].lat, 'lng': json[location].lng});
                 }
-            ];
 
-            let mcOptions = {
-                gridSize: 50,
-                styles: clusterStyles,
-                maxZoom: 15
-            };
+                // Generate markers for each parking meter location.
+                let markers = locations.map(function (location) {
+                    let marker = new google.maps.Marker({
+                        position: {'lat': location.lat, 'lng': location.lng},                    
+                        title: 'Click for details'
+                    });
+                    // Content of info window. 
+                    
+                    // Test points
+                    // let start_lat = 34.0224;
+                    // let start_lng = -118.2851;                                   
 
-            // Generate a marker cluster for better UI.
-            let markerCluster = new MarkerClusterer(map, markers,
-                {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'}
-            );
+                    let contentString = '<div id="content">'+
+                        '<div id="siteNotice">'+
+                        '</div>'+
+                        '<h1 class="firstHeading">' + location.space_id + '</h1>'+
+                        '<div id="bodyContent">'+
+                        // '<input type="button" id="button-directions" value="Get Directions" onclick="calculateRoute({lat: ' + start_lat + ', lng: ' + start_lng + '}, {lat: ' + location.lat + ', lng: ' + location.lng + '})"/>' +
+                        '<input type="button" id="button-directions" value="Get Directions" onclick="calculateRoute({lat: ' + position.coords.latitude + ', lng: ' + position.coords.longitude + '}, {lat: ' + location.lat + ', lng: ' + location.lng + '})"/>' +
+                        '</div>'+
+                        '</div>';
+
+                    let infowindow = new google.maps.InfoWindow({
+                        content: contentString
+                    });
+
+                    marker.addListener('click', function() {
+                        // Zoom and center location upon marker click.
+                        map.setCenter(marker.getPosition());
+
+                        // Get directions
+
+                        // Popup info window on marker click.
+                        infowindow.open(map, marker);
+                    });
+                    return marker;
+
+                    // Only allow one infoWindow to show at once.
+                    // google.maps.event.addEventListener(marker, 'click', (function(marker) {
+                    //     return function(evt) {
+                    //         infowindow.setContent('HELLO');
+                    //         infowindow.open(map, marker);
+                    //     }
+                    // })(marker));
+                });
+
+                // Style cluster markers.
+                let clusterStyles = [
+                    {
+                        textColor: 'black',
+                        url: 'https://github.com/justindho/ParkEasyLA/blob/master/img/m1.png?raw=true',
+                        height: 50,
+                        width: 50
+                    },
+                    {
+                        textColor: 'black',
+                        url: 'https://github.com/justindho/ParkEasyLA/blob/master/img/m2.png?raw=true',
+                        height: 50,
+                        width: 50
+                    },
+                    {
+                        textColor: 'black',
+                        url: 'https://github.com/justindho/ParkEasyLA/blob/master/img/m3.png?raw=true',
+                        height: 50,
+                        width: 50
+                    }
+                ];
+
+                let mcOptions = {
+                    gridSize: 50,
+                    styles: clusterStyles,
+                    maxZoom: 15
+                };
+
+                // Generate a marker cluster for better UI.
+                let markerCluster = new MarkerClusterer(map, markers,
+                    {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'}
+                );
+            });
         });
 }
 
