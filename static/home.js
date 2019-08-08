@@ -1,17 +1,13 @@
 let map;
+// let pos = getLocation();    
 function initMap() {
-    // The map, centered at LA
+    // The map, centered at LA.
     map = new google.maps.Map(document.getElementById('map'), {
         center: {lat: 34.05223, lng: -118.24368},
         zoom: 12
     });
-    // Demo marker
-    // let marker = new google.maps.Marker({
-    //     position: {lat: 34.05223, lng: -118.24368},
-    //     map: map
-    // });
 
-    // Query Socrata for vacant parking meter spots and plot results
+    // Query Socrata for vacant parking meter spots and plot results.
     // url = "https://data.lacity.org/resource/e7h6-4a3e.json?"
     //     + "occupancystate=VACANT"
     //     + "&$$app_token=ixOdggdMHJEhj3AjuHZ9JlPT4";
@@ -27,7 +23,7 @@ function initMap() {
     //     });
     // });
 
-    // AJAX request for vacant openings in Socrata data set
+    // AJAX request for vacant openings in Socrata data set.
     $.ajax({
         url: "https://data.lacity.org/resource/e7h6-4a3e.json?occupancystate=VACANT",
         type: "GET",
@@ -40,55 +36,60 @@ function initMap() {
         console.log(data);
     });
 
-    // fetch all parking meters from python backend
+    // Fetch all parking meters from python backend.
     fetch('allmeters')
         .then(function (response) {
+            // let pos = getLocation();
+            // console.log('line 43 position: ' + pos);         
+            // return {pos: getLocation(), response: response.json()};
             return response.json();
+        // }).then(function(json) {
+        //     let pos = getLocation();
         }).then(function (json) {
-            // generate a marker for each parking meter
-            // for (let meter in json) {
-            //     let marker = new google.maps.Marker({
-            //         position: {lat: json[meter].lat, lng: json[meter].lng},
-            //         map: map
-            //     });
-            // }
-
-            // store locations from json response in an array
+            // console.log('current position: ' + json.pos);
+            // Store locations from json response in an array.
             let locations = [];
-            for (let location in json) {
-                // locations.push({'lat': json[location].lat, 'lng': json[location].lng});
+            for (let location in json) {                
                 locations.push({'space_id': json[location].space_id, 'lat': json[location].lat, 'lng': json[location].lng});
             }
 
-            // generate markers for each parking meter location
+            // Generate markers for each parking meter location.
             let markers = locations.map(function (location) {
-                let marker = new google.maps.Marker({                                
-                    position: {'lat': location.lat, 'lng': location.lng},
-                    // map: map,
-                    title: 'Click for details'                                
+                let marker = new google.maps.Marker({
+                    position: {'lat': location.lat, 'lng': location.lng},                    
+                    title: 'Click for details'
                 });
-                // content of info window
+                // Content of info window.                                
+                let start_lat = 34.0224;
+                let start_lng = -118.2851;
+                // let pos = getLocation();                
+
                 let contentString = '<div id="content">'+
                     '<div id="siteNotice">'+
                     '</div>'+
                     '<h1 class="firstHeading">' + location.space_id + '</h1>'+
                     '<div id="bodyContent">'+
-                    '<p><a href="">Get directions</a></p>'+                                                                
+                    '<input type="button" id="button-directions" value="Get Directions" onclick="calculateRoute({lat: ' + start_lat + ', lng: ' + start_lng + '}, {lat: ' + location.lat + ', lng: ' + location.lng + '})"/>' +
+                    // '<input type="button" id="button-directions" value="Get Directions" onclick="calculateRoute({lat: ' + pos.lat + ', lng: ' + pos.lng + '}, {lat: ' + location.lat + ', lng: ' + location.lng + '})"/>' +
                     '</div>'+
                     '</div>';
 
                 let infowindow = new google.maps.InfoWindow({
                     content: contentString
                 });
-                
+
                 marker.addListener('click', function() {
-                    // zoom and center location upon marker click                                
-                    map.setCenter(marker.getPosition());                                                                
-                    // popup info window on marker click
-                    infowindow.open(map, marker);                                
+                    // Zoom and center location upon marker click.
+                    map.setCenter(marker.getPosition());
+
+                    // Get directions
+
+                    // Popup info window on marker click.
+                    infowindow.open(map, marker);
                 });
-                return marker;    
-                
+                return marker;
+
+                // Only allow one infoWindow to show at once.
                 // google.maps.event.addEventListener(marker, 'click', (function(marker) {
                 //     return function(evt) {
                 //         infowindow.setContent('HELLO');
@@ -97,7 +98,7 @@ function initMap() {
                 // })(marker));
             });
 
-            // style cluster markers
+            // Style cluster markers.
             let clusterStyles = [
                 {
                     textColor: 'black',
@@ -125,36 +126,62 @@ function initMap() {
                 maxZoom: 15
             };
 
-            // generate a marker cluster for better UI
+            // Generate a marker cluster for better UI.
             let markerCluster = new MarkerClusterer(map, markers,
                 {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'}
             );
         });
 }
 
-// get user's geolocation
-// AS OF CHROME 50, THE GEOLOCATION API WILL ONLY WORK ON SECURE CONTEXTS SUCH 
-// AS HTTPS. IF YOUR SITE IS HOSTED ON AN NON-SECURE ORIGIN (SUCH AS HTTP) THE 
+// Get user's geolocation.
+// AS OF CHROME 50, THE GEOLOCATION API WILL ONLY WORK ON SECURE CONTEXTS SUCH
+// AS HTTPS. IF YOUR SITE IS HOSTED ON AN NON-SECURE ORIGIN (SUCH AS HTTP) THE
 // REQUESTS TO GET THE USER'S LOCATION WILL NO LONGER FUNCTION.
-function getLocation(infoWindow) {
+// function getLocationSuccess() {
+//     // Try HTML5 geolocation.
+//     let pos;
+//     if (navigator.geolocation) {
+//         navigator.geolocation.getCurrentPosition(function (position) {
+//             pos = {
+//                 lat: position.coords.latitude,
+//                 lng: position.coords.longitude
+//             };
+//             console.log('(' + pos.lat + ', ' + pos.lng + ')');
+//             return pos;
+//             // console.log('POS TYPE: ' + typeof pos);
+//             // alert('CURRENT LOCATION: (' + pos.lat + ', ' + pos.lng + ')');
+//         });
+//         // , function() {
+//         //     // handleLocationError(error, infoWindow);
+//         // });
+//     }
+// }
+function getLocation() {
+    // return new Promise((getLocationSuccess, getLocationFailure) => {
+        
+    // });
     // Try HTML5 geolocation.
+    let pos;
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function (position) {
-            let pos = {
+            pos = {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
             };
-            alert('CURRENT LOCATION: (' + pos.lat + ', ' + pos.lng + ')');
-        }, function() {
-            handleLocationError(error, infoWindow);
+            console.log('(' + pos.lat + ', ' + pos.lng + ')');
+            return pos;
+            // console.log('POS TYPE: ' + typeof pos);
+            // alert('CURRENT LOCATION: (' + pos.lat + ', ' + pos.lng + ')');
         });
+        // , function() {
+        //     // handleLocationError(error, infoWindow);
+        // });
     } else {
-        // Browser doesn't support Geolocation
+        // Browser doesn't support Geolocation.
         handleLocationError(error, infoWindow);
-        alert('BROWSER DOESN\'T SUPPORT GEOLOCATION');
+        alert('PLEASE ENABLE GEOLOCATION IN YOUR BROWSER');
     }
 };
-getLocation();
 
 
 function handleLocationError(error, infoWindow) {
@@ -174,28 +201,85 @@ function handleLocationError(error, infoWindow) {
     }
 }
 
-// get directions from user's current location to parking meter
-// function getDirections(lat, lng) {
-//     let origin = 
-//     let destination = {
-//         lat: lat,
-//         lng: lng
+// Get directions from user's current location to parking meter.
+function calculateRoute(startLocation, endLocation) {
+    console.log('Inside calculateRoute');
+    // Get directions.
+    let directionService = new google.maps.DirectionsService;
+    let directionsDisplay = new google.maps.DirectionsRenderer;
+    let request = {
+        origin: startLocation,
+        destination: endLocation,
+        travelMode: 'DRIVING',
+        // transitOptions: TransitOptions,
+        // drivingOptions: DrivingOptions,
+        unitSystem: google.maps.UnitSystem.IMPERIAL
+        // waypoints[]: DirectionsWaypoint,
+        // optimizeWaypoints: Boolean,
+        // provideRouteAlternatives: Boolean,
+        // avoidFerries: True,
+        // avoidHighways: Boolean,
+        // avoidTolls: Boolean,
+        // region: String
+    };
+    directionService.route(request, function(result, status) {
+        if (status == 'OK') {            
+            directionsDisplay.setMap(map);
+            directionsDisplay.setDirections(result);
+
+        }
+        else {
+            alert('An error occurred.');
+        }
+    });
+};
+
+
+// function calculateRoute(startLocation, endLocation) {
+//     // Try HTML5 geolocation.
+//     let pos;
+//     if (navigator.geolocation) {
+//         navigator.geolocation.getCurrentPosition(function (position) {
+//             pos = {
+//                 lat: position.coords.latitude,
+//                 lng: position.coords.longitude
+//             };
+
+//             // Get directions.
+//             let directionService = new google.maps.directionService;
+//             let directionsDisplay = new google.maps.DirectionsRenderer;
+//             let request = {
+//                 origin: pos,
+//                 destination: endLocation,
+//                 travelMode: 'DRIVING',
+//                 // transitOptions: TransitOptions,
+//                 // drivingOptions: DrivingOptions,
+//                 unitSystem: google.maps.UnitSystem.IMPERIAL
+//                 // waypoints[]: DirectionsWaypoint,
+//                 // optimizeWaypoints: Boolean,
+//                 // provideRouteAlternatives: Boolean,
+//                 // avoidFerries: True,
+//                 // avoidHighways: Boolean,
+//                 // avoidTolls: Boolean,
+//                 // region: String
+//             };
+//             directionService.route(request, function(result, status) {
+//                 if (status == 'OK') {
+//                     directionsDisplay.setDirections(result);
+//                 }
+//             });
+
+//             // console.log('(' + pos.lat + ', ' + pos.lng + ')');
+//             // return pos;
+//             // console.log('POS TYPE: ' + typeof pos);
+//             // alert('CURRENT LOCATION: (' + pos.lat + ', ' + pos.lng + ')');
+//         });
+//         // , function() {
+//         //     // handleLocationError(error, infoWindow);
+//         // });
+//     } else {
+//         // Browser doesn't support Geolocation.
+//         handleLocationError(error, infoWindow);
+//         alert('BROWSER DOESN\'T SUPPORT GEOLOCATION');
 //     }
-//     let directionService = new google.maps.directionService;
-//     let directionsDisplay = new google.maps.DirectionsRenderer;
-//     directionService.route({
-//         origin: origin,
-//         destination: destination,
-//         travelMode: TravelMode,
-//         transitOptions: TransitOptions,
-//         drivingOptions: DrivingOptions,
-//         unitSystem: UnitSystem,
-//         waypoints[]: DirectionsWaypoint,
-//         optimizeWaypoints: Boolean,
-//         provideRouteAlternatives: Boolean,
-//         avoidFerries: Boolean,
-//         avoidHighways: Boolean,
-//         avoidTolls: Boolean,
-//         region: String
-//     });
-// }
+// };
