@@ -88,8 +88,8 @@ def create_tables():
         # read the connection parameters
         params = config()
         # connect to the PostgreSQL server
-        print("Connecting to the PostgreSQL database...")
         conn = psycopg2.connect(**params)
+        print("Database connection opened")
         cur = conn.cursor()
 
         # get the updated list of tables
@@ -122,8 +122,8 @@ def insert_inventory():
         # read the connection parameters
         params = config()
         # connect to the PostgreSQL server
-        print("Connecting to the PostgreSQL database...")
         conn = psycopg2.connect(**params)
+        print("Database connection opened")
         cur = conn.cursor()
         # execute SQL commands
         for command in commands:
@@ -143,26 +143,25 @@ def insert_inventory():
 def get_all_meters():
     """ Query the PostgreSQL database for all parking meter information. """
     # Get id and coordinates of all parking meters
-    conn = None    
+    conn = None
     try:
         params = config()
         conn = psycopg2.connect(**params)
+        print("Database connection opened")
         cur = conn.cursor()
         cur.execute("SELECT space_id, latitude::float, longitude::float FROM inventory")
         result = cur.fetchall()
-        meter_info = {}
+        meters = {}
         for i in range(len(result)):
-            meter_info[result[i][0]] = {'space_id': result[i][0], 'lat': result[i][1], 'lng': result[i][2]}            
-        cur.close()        
+            meters[result[i][0]] = {'space_id': result[i][0], 'lat': result[i][1], 'lng': result[i][2]}
+        cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
     finally:
         if conn is not None:
             conn.close()
             print("Database connection closed")
-    # return (latitudes, longitudes)
-    return meter_info
-    # return json.dumps(lat_lng)
+    return meters
 
 def get_vacant_meters():
     """ Query the Socrata API for all vacant parking meter information. """
@@ -175,14 +174,35 @@ def get_vacant_meters():
 
     # Return JSON from API / converted to Python list of dictionaries by sodapy of
     # vacant parking meters
-    vacant_meters = client.get("e7h6-4a3e", occupancystate="VACANT")
+    vacant_ids = client.get("e7h6-4a3e", occupancystate="VACANT")
 
-    # Convert to pandas DataFrame
-    vacant_meters_df = pd.DataFrame.from_records(vacant_meters)
-    # print(results_df.head())
-    print("Number of vacant parking meters: " + str(vacant_meters_df.shape[0]))
+    # Get id and coordinates of all parking meters
+    conn = None
+    vacant_meters = {}
+    try:
+        params = config()
+        conn = psycopg2.connect(**params)
+        print("Database connection opened")
+        cur = conn.cursor()
+        for space in vacant_ids:
+            cur.execute("SELECT COUNT(*) FROM inventory WHERE space_id=%s", (space['spaceid'],))
+            res = cur.fetchone()
+            if res[0] != 0:
+                cur.execute("SELECT space_id, latitude::float, longitude::float FROM inventory WHERE space_id=%s", (space['spaceid'],))
+                result = cur.fetchone()
+                # print(result)
+                vacant_meters[result[0]] = {'space_id': result[0], 'lat': result[1], 'lng': result[2]}
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:        
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+            print("Database connection closed")
 
-    return (latitudes, longitudes)
+    print("Number of vacant parking meters: " + str(len(vacant_meters)))
+
+    return vacant_meters
 
 def plot_data(data):
     """ Create a plot the given datapoints onto the base Google Map.

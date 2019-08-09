@@ -1,5 +1,4 @@
 let map;
-// let pos = getLocation();    
 function initMap() {
     // The map, centered at LA.
     map = new google.maps.Map(document.getElementById('map'), {
@@ -8,9 +7,9 @@ function initMap() {
     });
 
     // Query Socrata for vacant parking meter spots and plot results.
-    // url = "https://data.lacity.org/resource/e7h6-4a3e.json?"
-    //     + "occupancystate=VACANT"
-    //     + "&$$app_token=ixOdggdMHJEhj3AjuHZ9JlPT4";
+    url = "https://data.lacity.org/resource/e7h6-4a3e.json?"
+        + "occupancystate=VACANT"
+        + "&$$app_token=ixOdggdMHJEhj3AjuHZ9JlPT4";
     // $.getJSON(url, function(data, textstatus) {
     //     $.each(data, function(i, entry) {
     //         // Create a marker for each entry on our map
@@ -37,28 +36,28 @@ function initMap() {
     });
 
     // Fetch all parking meters from python backend.
-    navigator.geolocation.getCurrentPosition(function(position) {    
-        fetch('allmeters')
-            .then(function (response) {                
-                return response.json();            
-            }).then(function (json) {                
+    navigator.geolocation.getCurrentPosition(function(position) {
+        fetch('vacant_meters')
+            .then(function (response) {
+                return response.json();
+            }).then(function (json) {
                 // Store locations from json response in an array.
                 let locations = [];
-                for (let location in json) {                
+                for (let location in json) {
                     locations.push({'space_id': json[location].space_id, 'lat': json[location].lat, 'lng': json[location].lng});
                 }
 
                 // Generate markers for each parking meter location.
                 let markers = locations.map(function (location) {
                     let marker = new google.maps.Marker({
-                        position: {'lat': location.lat, 'lng': location.lng},                    
+                        position: {'lat': location.lat, 'lng': location.lng},
                         title: 'Click for details'
                     });
-                    // Content of info window. 
-                    
+                    // Content of info window.
+
                     // Test points
                     // let start_lat = 34.0224;
-                    // let start_lng = -118.2851;                                   
+                    // let start_lng = -118.2851;
 
                     let contentString = '<div id="content">'+
                         '<div id="siteNotice">'+
@@ -134,29 +133,7 @@ function initMap() {
 // AS OF CHROME 50, THE GEOLOCATION API WILL ONLY WORK ON SECURE CONTEXTS SUCH
 // AS HTTPS. IF YOUR SITE IS HOSTED ON AN NON-SECURE ORIGIN (SUCH AS HTTP) THE
 // REQUESTS TO GET THE USER'S LOCATION WILL NO LONGER FUNCTION.
-// function getLocationSuccess() {
-//     // Try HTML5 geolocation.
-//     let pos;
-//     if (navigator.geolocation) {
-//         navigator.geolocation.getCurrentPosition(function (position) {
-//             pos = {
-//                 lat: position.coords.latitude,
-//                 lng: position.coords.longitude
-//             };
-//             console.log('(' + pos.lat + ', ' + pos.lng + ')');
-//             return pos;
-//             // console.log('POS TYPE: ' + typeof pos);
-//             // alert('CURRENT LOCATION: (' + pos.lat + ', ' + pos.lng + ')');
-//         });
-//         // , function() {
-//         //     // handleLocationError(error, infoWindow);
-//         // });
-//     }
-// }
 function getLocation() {
-    // return new Promise((getLocationSuccess, getLocationFailure) => {
-        
-    // });
     // Try HTML5 geolocation.
     let pos;
     if (navigator.geolocation) {
@@ -180,7 +157,6 @@ function getLocation() {
     }
 };
 
-
 function handleLocationError(error, infoWindow) {
     switch(error) {
         case error.PERMISSION_DENIED:
@@ -199,8 +175,7 @@ function handleLocationError(error, infoWindow) {
 }
 
 // Get directions from user's current location to parking meter.
-function calculateRoute(startLocation, endLocation) {
-    console.log('Inside calculateRoute');
+function calculateRoute(startLocation, endLocation) {    
     // Get directions.
     let directionService = new google.maps.DirectionsService;
     let directionsDisplay = new google.maps.DirectionsRenderer;
@@ -220,7 +195,7 @@ function calculateRoute(startLocation, endLocation) {
         // region: String
     };
     directionService.route(request, function(result, status) {
-        if (status == 'OK') {            
+        if (status == 'OK') {
             directionsDisplay.setMap(map);
             directionsDisplay.setDirections(result);
 
@@ -230,53 +205,3 @@ function calculateRoute(startLocation, endLocation) {
         }
     });
 };
-
-
-// function calculateRoute(startLocation, endLocation) {
-//     // Try HTML5 geolocation.
-//     let pos;
-//     if (navigator.geolocation) {
-//         navigator.geolocation.getCurrentPosition(function (position) {
-//             pos = {
-//                 lat: position.coords.latitude,
-//                 lng: position.coords.longitude
-//             };
-
-//             // Get directions.
-//             let directionService = new google.maps.directionService;
-//             let directionsDisplay = new google.maps.DirectionsRenderer;
-//             let request = {
-//                 origin: pos,
-//                 destination: endLocation,
-//                 travelMode: 'DRIVING',
-//                 // transitOptions: TransitOptions,
-//                 // drivingOptions: DrivingOptions,
-//                 unitSystem: google.maps.UnitSystem.IMPERIAL
-//                 // waypoints[]: DirectionsWaypoint,
-//                 // optimizeWaypoints: Boolean,
-//                 // provideRouteAlternatives: Boolean,
-//                 // avoidFerries: True,
-//                 // avoidHighways: Boolean,
-//                 // avoidTolls: Boolean,
-//                 // region: String
-//             };
-//             directionService.route(request, function(result, status) {
-//                 if (status == 'OK') {
-//                     directionsDisplay.setDirections(result);
-//                 }
-//             });
-
-//             // console.log('(' + pos.lat + ', ' + pos.lng + ')');
-//             // return pos;
-//             // console.log('POS TYPE: ' + typeof pos);
-//             // alert('CURRENT LOCATION: (' + pos.lat + ', ' + pos.lng + ')');
-//         });
-//         // , function() {
-//         //     // handleLocationError(error, infoWindow);
-//         // });
-//     } else {
-//         // Browser doesn't support Geolocation.
-//         handleLocationError(error, infoWindow);
-//         alert('BROWSER DOESN\'T SUPPORT GEOLOCATION');
-//     }
-// };
