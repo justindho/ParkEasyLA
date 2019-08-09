@@ -183,15 +183,19 @@ function calculateRoute(startLocation, endLocation) {
         origin: startLocation,
         destination: endLocation,
         travelMode: 'DRIVING',
+        drivingOptions: {
+            departureTime: new Date(Date.now()),
+            trafficModel: 'pessimistic'
+        },
         // transitOptions: TransitOptions,
         // drivingOptions: DrivingOptions,
-        unitSystem: google.maps.UnitSystem.IMPERIAL
+        unitSystem: google.maps.UnitSystem.IMPERIAL,
         // waypoints[]: DirectionsWaypoint,
         // optimizeWaypoints: Boolean,
         // provideRouteAlternatives: Boolean,
-        // avoidFerries: True,
-        // avoidHighways: Boolean,
-        // avoidTolls: Boolean,
+        avoidFerries: true,
+        avoidHighways: false,
+        avoidTolls: true
         // region: String
     };
     directionService.route(request, function(result, status) {
@@ -199,6 +203,12 @@ function calculateRoute(startLocation, endLocation) {
             directionsDisplay.setMap(map);
             directionsDisplay.setDirections(result);
 
+            // Display distance (nearest tenth of a mile) and commute time (nearest minute)
+            let metersInMile = 1609.34;
+            let distance = Math.round(result.routes[0].legs[0].distance.value * 10 / metersInMile) / 10;
+            let duration = Math.round(result.routes[0].legs[0].duration.value / 60);
+            document.getElementById('tripStats').innerHTML = `Distance: ` 
+                + distance.toFixed(1) + ` miles.\n` + `Duration: ` + duration.toFixed(1) + ` minutes.`;            
         }
         else {
             alert('An error occurred.');
