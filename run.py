@@ -1,16 +1,11 @@
 from flask import Flask, render_template, jsonify
 from helpers import *
 from settings import *
-import geopandas as gpd
-import gmplot
 import json
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import psycopg2
-import pygmaps
 from sodapy import Socrata
-# import sqlite, csv
 
 app = Flask(__name__)
 
@@ -22,10 +17,13 @@ client = Socrata("data.lacity.org",
 
 # Return JSON from API / converted to Python list of dictionaries by sodapy of 
 # vacant parking meters
-try:
+vacant_meters = None
+while (vacant_meters == None):
     vacant_meters = client.get("e7h6-4a3e", occupancystate="VACANT")
-except:
-    print("Timeout occurred")
+# try:
+#     vacant_meters = client.get("e7h6-4a3e", occupancystate="VACANT")
+# except:
+#     print("Timeout occurred")
 
 # Convert to pandas DataFrame
 results_df = pd.DataFrame.from_records(vacant_meters)
@@ -43,17 +41,12 @@ try:
     conn = psycopg2.connect(**params)
     cur = conn.cursor()
     result1 = results_df.iloc[0]
-    spaceid = result1['spaceid']
-    print('spaceid: ' + spaceid)
+    spaceid = result1['spaceid']    
     cur.execute("SELECT latitude::float, longitude::float FROM inventory WHERE space_id='%s';" % spaceid)
-    result = cur.fetchall()       
-    print('size of result: ' + str(result)) 
+    result = cur.fetchall()           
     for i in range(len(result)):
-        lat_lng.append((result[i][0], result[i][1]))  
-    for j in lat_lng:
-        print("spaceid j: " + str(j))
-    cur.close()
-    print("WE MADE IT")
+        lat_lng.append((result[i][0], result[i][1]))      
+    cur.close()    
 except (Exception, psycopg2.DatabaseError) as error:    
     print(error)
 finally:
@@ -120,19 +113,13 @@ def main():
     # plot_data(lat_lng[0])
     # return render_template("mapLA.html")
 
-@app.route('/vacancies')
+@app.route('/vacantMeters')
 def vacancies():
     """ Get vacant parking meters """
-
-    # Query for parking meters
-    # conn = connect()
-    # cur = conn.cursor()
-    # cur.execute("SELECT space_id, latitude::float, longitude::float FROM inventory")
-    # meters = cur.fetchall()
     
-    return None
+    return jsonify(get_vacant_meters())
 
-@app.route('/allmeters')
+@app.route('/allMeters')
 def all_meters():
     """ Get all parking meters """
     meter_data = get_all_meters()
