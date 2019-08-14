@@ -1,5 +1,6 @@
 let map;
 function initMap() {
+// function initMap(meterView) {
     // The map, centered at LA.
     map = new google.maps.Map(document.getElementById('map'), {
         center: {lat: 34.05223, lng: -118.24368},
@@ -37,7 +38,9 @@ function initMap() {
 
     // Fetch all parking meters from python backend.
     navigator.geolocation.getCurrentPosition(function(position) {
-        fetch('vacant_meters')
+        fetch('vacantMeters')
+        // console.log('meterView: ' + meterView);
+        // fetch(meterView)
             .then(function (response) {
                 return response.json();
             }).then(function (json) {
@@ -93,33 +96,33 @@ function initMap() {
                     // })(marker));
                 });
 
-                // Style cluster markers.
-                let clusterStyles = [
-                    {
-                        textColor: 'black',
-                        url: 'https://github.com/justindho/ParkEasyLA/blob/master/img/m1.png?raw=true',
-                        height: 50,
-                        width: 50
-                    },
-                    {
-                        textColor: 'black',
-                        url: 'https://github.com/justindho/ParkEasyLA/blob/master/img/m2.png?raw=true',
-                        height: 50,
-                        width: 50
-                    },
-                    {
-                        textColor: 'black',
-                        url: 'https://github.com/justindho/ParkEasyLA/blob/master/img/m3.png?raw=true',
-                        height: 50,
-                        width: 50
-                    }
-                ];
+                // // Style cluster markers.
+                // let clusterStyles = [
+                //     {
+                //         textColor: 'black',
+                //         url: 'https://github.com/justindho/ParkEasyLA/blob/master/img/m1.png?raw=true',
+                //         height: 50,
+                //         width: 50
+                //     },
+                //     {
+                //         textColor: 'black',
+                //         url: 'https://github.com/justindho/ParkEasyLA/blob/master/img/m2.png?raw=true',
+                //         height: 50,
+                //         width: 50
+                //     },
+                //     {
+                //         textColor: 'black',
+                //         url: 'https://github.com/justindho/ParkEasyLA/blob/master/img/m3.png?raw=true',
+                //         height: 50,
+                //         width: 50
+                //     }
+                // ];
 
-                let mcOptions = {
-                    gridSize: 50,
-                    styles: clusterStyles,
-                    maxZoom: 15
-                };
+                // let mcOptions = {
+                //     gridSize: 50,
+                //     styles: clusterStyles,
+                //     maxZoom: 15
+                // };
 
                 // Generate a marker cluster for better UI.
                 let markerCluster = new MarkerClusterer(map, markers,
@@ -177,7 +180,7 @@ function handleLocationError(error, infoWindow) {
 // Get directions from user's current location to parking meter.
 function calculateRoute(startLocation, endLocation) {    
     // Get directions.
-    let directionService = new google.maps.DirectionsService;
+    let directionsService = new google.maps.DirectionsService;
     let directionsDisplay = new google.maps.DirectionsRenderer;
     let request = {
         origin: startLocation,
@@ -198,20 +201,98 @@ function calculateRoute(startLocation, endLocation) {
         avoidTolls: true
         // region: String
     };
-    directionService.route(request, function(result, status) {
+    directionsService.route(request, function(result, status) {
         if (status == 'OK') {
             directionsDisplay.setMap(map);
             directionsDisplay.setDirections(result);
 
+            // Get turn-by-turn directions
+            let directionsButton = document.createElement('button');
+            directionsButton.setAttribute('id', 'directionsButton');
+            let directionsButtonText = document.createTextNode('Show Details');
+            directionsButton.appendChild(directionsButtonText);
+            directionsButton.classList.add('btn', 'btn-info');
+
+            // Show/hide directions on 'details' button click
+            directionsButton.onclick = function() {
+                let map = document.getElementById('map');
+                let rightpanel = document.getElementById('right-panel');
+                console.log('BUTTON CLICKED!!');
+                let testmap = document.getElementById('map').getBoundingClientRect().width;
+                console.log('rightpanel.style.display: ' + rightpanel.style.display);
+                console.log('map width: ' + map.style.width);   
+                // console.log('window width: ' + window.innerWidth);             
+                
+                // if (map.style.width > .9 * window.innerWidth) {
+                // if (map.style.width == "100%") {
+                if (rightpanel.style.display == "none") {
+                    console.log('RIGHT.PANEL.STYLE.DISPLAY == NONE');
+                    map.style.width = "50%";
+                    directionsButton.innerHTML = "Hide Details";
+                    // rightpanel.getBoundingClientRect().width = "50%";
+                    rightpanel.style.display = "inline-block";
+                    rightpanel.style.width = "50%";
+                    directionsDisplay.setPanel(rightpanel);
+                } else {
+                    console.log('NOT NONE');
+                    map.style.width = "100%";
+                    rightpanel.style.display = "none";
+                    // rightpanel.style.width = "0%";
+                    directionsButton.innerHTML = "Show Details";
+                    // document.getElementById('right-panel').getBoundingClientRect().width = "0%";
+                }
+            }
+
+            // directionsDisplay.setPanel(document.getElementById('right-panel'));
+            
             // Display distance (nearest tenth of a mile) and commute time (nearest minute)
             let metersInMile = 1609.34;
             let distance = Math.round(result.routes[0].legs[0].distance.value * 10 / metersInMile) / 10;
             let duration = Math.round(result.routes[0].legs[0].duration.value / 60);
             document.getElementById('tripStats').innerHTML = `Distance: ` 
-                + distance.toFixed(1) + ` miles.\n` + `Duration: ` + duration.toFixed(1) + ` minutes.`;            
+                + distance.toFixed(1) + ` miles.\n` + `Duration: ` + duration.toFixed(1) + ` minutes.`;                 
+            document.getElementById('tripStats').appendChild(directionsButton);
         }
         else {
             alert('An error occurred.');
         }
     });
 };
+
+// document.addEventListener('DOMContentLoaded', () => {
+
+//     // Update displayed meters (all/vacant)
+//     document.getElementById('meterViews').onchange = () => {
+
+//         // Iniitalize request
+//         const xhr = new XMLHttpRequest();
+//         const viewType = document.getElementById('meterViews').value;
+//         if (viewType === 'allMeters') {
+//             let meterView = 'all_meters';
+//             xhr.open('POST', 'allMeters/');
+//         } else if (viewType === 'vacantMeters') {
+//             let meterVIew = 'vacant_meters';
+//             xhr.open('POST', 'vacantMeters/');
+//         }
+        
+//         // Callback function for when request completes
+//         xhr.onload = () => {
+
+//             console.log('Inside request onload');
+
+//             // Extract JSON data from request
+//             const response = JSON.parse(xhr.responseText);
+
+//             // Display meters (all or vacant)
+//             initMap(viewType);
+//         }
+
+//         // Add data to send with request
+//         const data = new FormData();
+//         data.append('viewType', viewType);
+
+//         // Send request
+//         xhr.send(data);
+//         return false;
+//     }
+// });
