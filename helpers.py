@@ -17,7 +17,7 @@ from sodapy import Socrata
 
 from config import config
 from flask import render_template, jsonify
-from settings import *
+# from settings import *
 
 def connect():
     """ Connect to the PostgreSQL database server
