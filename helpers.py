@@ -10,14 +10,9 @@
 
 """
 
-import geopandas as gpd
-import gmplot
 import json
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import psycopg2
-import pygmaps
 from sodapy import Socrata
 
 from config import config
