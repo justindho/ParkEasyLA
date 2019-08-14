@@ -188,10 +188,17 @@ def get_vacant_meters():
             cur.execute("SELECT COUNT(*) FROM inventory WHERE space_id=%s", (space['spaceid'],))
             res = cur.fetchone()
             if res[0] != 0:
-                cur.execute("SELECT space_id, latitude::float, longitude::float FROM inventory WHERE space_id=%s", (space['spaceid'],))
+                cur.execute("SELECT space_id, latitude::float, longitude::float, "
+                            "blockface, metertype, ratetype, raterange, "
+                            "meteredtimelimit, parkingpolicy, streetcleaning "
+                            "FROM inventory WHERE space_id=%s", (space['spaceid'],))
                 result = cur.fetchone()
                 # print(result)
-                vacant_meters[result[0]] = {'space_id': result[0], 'lat': result[1], 'lng': result[2]}
+                vacant_meters[result[0]] = {'space_id': result[0], 'lat': result[1], 
+                    'lng': result[2], 'blockface': result[3], 'metertype': result[4], 
+                    'ratetype': result[5], 'raterange': result[6], 
+                    'meteredtimelimit': result[7], 'parkingpolicy': result[8], 
+                    'streetcleaning': result[9]}
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:        
         print(error)
