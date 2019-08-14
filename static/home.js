@@ -1,4 +1,5 @@
 let map;
+let lastOpenedInfoWindow;
 function initMap() {
 // function initMap(meterView) {
     // The map, centered at LA.
@@ -80,7 +81,7 @@ function initMap() {
                         '<p><u>Parking Time Limit (during metered hours):</u> ' + location.meteredtimelimit + ' minutes</p>' + 
                         '<p><u>Parking Policy (meter hours of operation and enforced parking restrictions):</u> ' + location.parkingpolicy + '</p>' + 
                         '<p><u>Street Cleaning:</u> ' + location.streetcleaning + '</p>' + 
-                        '<input type="button" id="button-directions" value="Get Directions" onclick="calculateRoute({lat: ' + position.coords.latitude + ', lng: ' + position.coords.longitude + '}, {lat: ' + location.lat + ', lng: ' + location.lng + '})"/>' +
+                        '<input type="button" id="button-directions" class="btn btn-primary" value="Get Directions" onclick="calculateRoute({lat: ' + position.coords.latitude + ', lng: ' + position.coords.longitude + '}, {lat: ' + location.lat + ', lng: ' + location.lng + '})"/>' +
                         '</div>'+
                         '</div>';
 
@@ -89,52 +90,20 @@ function initMap() {
                     });
 
                     marker.addListener('click', function() {
-                        // Zoom and center location upon marker click.
-                        map.setCenter(marker.getPosition());
+                        // Close last-opened infoWindow
+                        if (lastOpenedInfoWindow) {
+                            lastOpenedInfoWindow.close();
+                        }
+                        lastOpenedInfoWindow = infowindow;
 
-                        // Get directions
+                        // Zoom and center location upon marker click.
+                        map.setCenter(marker.getPosition());                        
 
                         // Popup info window on marker click.
                         infowindow.open(map, marker);
                     });
                     return marker;
-
-                    // Only allow one infoWindow to show at once.
-                    // google.maps.event.addEventListener(marker, 'click', (function(marker) {
-                    //     return function(evt) {
-                    //         infowindow.setContent('HELLO');
-                    //         infowindow.open(map, marker);
-                    //     }
-                    // })(marker));
-                });
-
-                // // Style cluster markers.
-                // let clusterStyles = [
-                //     {
-                //         textColor: 'black',
-                //         url: 'https://github.com/justindho/ParkEasyLA/blob/master/img/m1.png?raw=true',
-                //         height: 50,
-                //         width: 50
-                //     },
-                //     {
-                //         textColor: 'black',
-                //         url: 'https://github.com/justindho/ParkEasyLA/blob/master/img/m2.png?raw=true',
-                //         height: 50,
-                //         width: 50
-                //     },
-                //     {
-                //         textColor: 'black',
-                //         url: 'https://github.com/justindho/ParkEasyLA/blob/master/img/m3.png?raw=true',
-                //         height: 50,
-                //         width: 50
-                //     }
-                // ];
-
-                // let mcOptions = {
-                //     gridSize: 50,
-                //     styles: clusterStyles,
-                //     maxZoom: 15
-                // };
+                });                
 
                 // Generate a marker cluster for better UI.
                 let markerCluster = new MarkerClusterer(map, markers,
@@ -265,7 +234,8 @@ function calculateRoute(startLocation, endLocation) {
                 // Remove step-by-step directions
                 directionsDisplay.setPanel(null);
                 // Expand map to full width
-                document.getElementById('map').setAttribute('style', 'width: 100%');
+                // document.getElementById('map').setAttribute('style', 'width: 70%');
+                // document.getElementById('map').setAttribute('style', 'height: 90%');
                 // Clear trip stats bar
                 document.getElementById('tripStats').innerHTML = '';
             }
