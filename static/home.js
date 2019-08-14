@@ -57,17 +57,11 @@ function initMap() {
                         title: 'Click for details'
                     });
                     // Content of info window.
-
-                    // Test points
-                    // let start_lat = 34.0224;
-                    // let start_lng = -118.2851;
-
                     let contentString = '<div id="content">'+
                         '<div id="siteNotice">'+
                         '</div>'+
                         '<h1 class="firstHeading">' + location.space_id + '</h1>'+
-                        '<div id="bodyContent">'+
-                        // '<input type="button" id="button-directions" value="Get Directions" onclick="calculateRoute({lat: ' + start_lat + ', lng: ' + start_lng + '}, {lat: ' + location.lat + ', lng: ' + location.lng + '})"/>' +
+                        '<div id="bodyContent">'+                        
                         '<input type="button" id="button-directions" value="Get Directions" onclick="calculateRoute({lat: ' + position.coords.latitude + ', lng: ' + position.coords.longitude + '}, {lat: ' + location.lat + ', lng: ' + location.lng + '})"/>' +
                         '</div>'+
                         '</div>';
@@ -215,35 +209,21 @@ function calculateRoute(startLocation, endLocation) {
 
             // Show/hide directions on 'details' button click
             directionsButton.onclick = function() {
-                let map = document.getElementById('map');
+                let mapDiv = document.getElementById('map');
                 let rightpanel = document.getElementById('right-panel');
-                console.log('BUTTON CLICKED!!');
-                let testmap = document.getElementById('map').getBoundingClientRect().width;
-                console.log('rightpanel.style.display: ' + rightpanel.style.display);
-                console.log('map width: ' + map.style.width);   
-                // console.log('window width: ' + window.innerWidth);             
                 
-                // if (map.style.width > .9 * window.innerWidth) {
-                // if (map.style.width == "100%") {
-                if (rightpanel.style.display == "none") {
-                    console.log('RIGHT.PANEL.STYLE.DISPLAY == NONE');
-                    map.style.width = "50%";
-                    directionsButton.innerHTML = "Hide Details";
-                    // rightpanel.getBoundingClientRect().width = "50%";
+                if (rightpanel.style.display == "none" || rightpanel.style.display == '') {                    
+                    mapDiv.style.width = "50%";
+                    directionsButton.innerHTML = "Hide Details";                    
                     rightpanel.style.display = "inline-block";
                     rightpanel.style.width = "50%";
                     directionsDisplay.setPanel(rightpanel);
-                } else {
-                    console.log('NOT NONE');
-                    map.style.width = "100%";
-                    rightpanel.style.display = "none";
-                    // rightpanel.style.width = "0%";
-                    directionsButton.innerHTML = "Show Details";
-                    // document.getElementById('right-panel').getBoundingClientRect().width = "0%";
+                } else {                    
+                    mapDiv.style.width = "100%";
+                    rightpanel.style.display = "none";                    
+                    directionsButton.innerHTML = "Show Details";                    
                 }
-            }
-
-            // directionsDisplay.setPanel(document.getElementById('right-panel'));
+            }            
             
             // Display distance (nearest tenth of a mile) and commute time (nearest minute)
             let metersInMile = 1609.34;
@@ -251,7 +231,27 @@ function calculateRoute(startLocation, endLocation) {
             let duration = Math.round(result.routes[0].legs[0].duration.value / 60);
             document.getElementById('tripStats').innerHTML = `Distance: ` 
                 + distance.toFixed(1) + ` miles.\n` + `Duration: ` + duration.toFixed(1) + ` minutes.`;                 
+            
+            // Add button to show/hide details of trip
             document.getElementById('tripStats').appendChild(directionsButton);
+
+            // Add button to clear map directions
+            let clearDirectionsButton = document.createElement('button');
+            clearDirectionsButton.setAttribute('id', 'clearButton');
+            clearDirectionsButton.classList.add('btn', 'btn-danger');
+            let clearDirectionsButtonText = document.createTextNode('Clear Directions');
+            clearDirectionsButton.appendChild(clearDirectionsButtonText);
+            clearDirectionsButton.onclick = function() {
+                // Remove highlighted route
+                directionsDisplay.setMap(null);
+                // Remove step-by-step directions
+                directionsDisplay.setPanel(null);
+                // Expand map to full width
+                document.getElementById('map').setAttribute('style', 'width: 100%');                
+                // Clear trip stats bar
+                document.getElementById('tripStats').innerHTML = '';               
+            }
+            document.getElementById('tripStats').appendChild(clearDirectionsButton);
         }
         else {
             alert('An error occurred.');
