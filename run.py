@@ -1,8 +1,7 @@
 from flask import Flask, render_template, jsonify
 from helpers import *
-# from settings import *
+
 import json
-import matplotlib.pyplot as plt
 import os
 import pandas as pd
 import psycopg2
