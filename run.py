@@ -1,8 +1,9 @@
 from flask import Flask, render_template, jsonify
 from helpers import *
-from settings import *
+# from settings import *
 import json
 import matplotlib.pyplot as plt
+import os
 import pandas as pd
 import psycopg2
 from sodapy import Socrata
@@ -11,9 +12,13 @@ app = Flask(__name__)
 
 # Authenticated client
 client = Socrata("data.lacity.org",
-                  SODA_app_token,
-                  username=SODA_username,
-                  password=SODA_pwd)
+                  os.environ['SODA_app_token'],
+                  username=os.environ['SODA_username'],
+                  password=os.environ['SODA_pwd'])
+# client = Socrata("data.lacity.org",
+#                   SODA_app_token,
+#                   username=SODA_username,
+#                   password=SODA_pwd)
 
 # Return JSON from API / converted to Python list of dictionaries by sodapy of 
 # vacant parking meters
