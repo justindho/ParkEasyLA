@@ -41,7 +41,7 @@ Features to add in the future:
 
 ## FAQ
 **Q: Where is the parking availability data sourced from?**<br/>
-A: Parking data is sourced from <a href="data.lacity.org">data.lacity.org</a>
+A: Parking data is sourced from <a href="https://data.lacity.org/A-Livable-and-Sustainable-City/LADOT-Parking-Meter-Occupancy/e7h6-4a3e">data.lacity.org</a>
 
 **Q: I am unable to get directions from my current location. How do I fix this?**<br/>
 A: You will need to enable location services in your web browser. If you are 
