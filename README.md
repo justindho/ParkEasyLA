@@ -6,8 +6,10 @@ regarding these parking meters, including, but not limited to, pricing, hours
 of operation, and street cleaning hours.
 
 ## Screenshots
-Landing Page: ![](/screenshots/landing_page.PNG)
-Vacant Parking Meter Spots: ![](/screenshots/zoomed_in_vacant_spots.PNG)
+![App Demo](./img/parkeasyLA.gif)
+
+Landing Page: ![](./screenshots/landing_page.PNG)
+Vacant Parking Meter Spots: ![](./screenshots/zoomed_in_vacant_spots.PNG)
 Parking Meter Info: ![](/screenshots/parking_meter_info.PNG)
 Directions from User's Current Location to Parking Meter: ![](/screenshots/directions.PNG)
 
